@@ -1,0 +1,551 @@
+<!--
+  PROTOTYPE — throwaway. Answers wayfinder ticket #10 (Design Certificate layout).
+  Three radically different Certificate layouts, switchable via the bottom bar or
+  URL hash (#A / #B / #C). Uses the real brand assets from assets/brand/ and the
+  brand's two Google Fonts (Anton, Inter). Open this file directly in a browser —
+  no build step, no server.
+
+  Also lets you flip the "Level" (Beginner / Intermediate / Advanced) on whichever
+  variant is showing, to demonstrate that per the brand kit's restrained 2-colour
+  palette, only the Level name changes between certificates — not the colour
+  scheme. That's a design assumption baked into all three variants, not a given:
+  react to it too.
+
+  Not for production. Fold the winning layout into a real template and delete
+  this file (and its siblings on the throwaway branch) once ticket #10 is closed.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Certificate prototype — wayfinder #10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #ED0E69;
+    --teal: #16B9B4;
+    --white: #FFFFFF;
+    --ink: #111111;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #e9e9e9;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 120px;
+  }
+
+  .meta-bar {
+    max-width: 1200px;
+    width: 100%;
+    margin-bottom: 24px;
+    color: #444;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .meta-bar b { color: var(--ink); }
+
+  .level-controls {
+    max-width: 1200px;
+    width: 100%;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+  }
+  .level-controls button {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink);
+    background: var(--white);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .level-controls button.active {
+    background: var(--ink);
+    color: var(--white);
+  }
+
+  .certificate-frame {
+    width: 100%;
+    max-width: 1200px;
+    overflow: hidden;
+  }
+
+  .certificate {
+    width: 1200px;
+    height: 848px;
+    background: var(--white);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    transform-origin: top left;
+  }
+
+  .variant { display: none; width: 100%; height: 100%; }
+  .variant.active { display: block; }
+
+  /* ---------- Variant A: Formal / Traditional (richer pass) ---------- */
+  #variant-A .frame {
+    position: absolute;
+    inset: 22px;
+    border: 5px solid var(--pink);
+    padding: 6px;
+  }
+  #variant-A .frame-inner {
+    height: 100%;
+    border: 1px solid var(--pink);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  #variant-A .top-band {
+    background: var(--ink);
+    border-bottom: 4px solid var(--teal);
+    padding: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #variant-A .top-band .logo { height: 34px; }
+  #variant-A .content-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px 80px 56px;
+    position: relative;
+  }
+  #variant-A .watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 340px;
+    transform: translate(-50%, -50%);
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+  }
+  #variant-A .content-wrap > * { position: relative; z-index: 1; }
+  #variant-A .eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    font-size: 13px;
+    color: var(--pink);
+    margin-bottom: 18px;
+  }
+  #variant-A .name {
+    font-family: 'Anton', sans-serif;
+    font-size: 62px;
+    line-height: 1;
+    color: var(--ink);
+    text-transform: uppercase;
+    margin: 6px 0 18px;
+  }
+  #variant-A .body-line {
+    font-size: 17px;
+    color: #333;
+    max-width: 640px;
+    margin: 0 auto 6px;
+  }
+  #variant-A .level-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 30px;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin: 14px 0 0;
+  }
+  #variant-A .footer-bar {
+    margin-top: auto;
+    background: var(--ink);
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 64px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  #variant-A .footer-col { text-align: left; font-size: 12px; color: #bbb; }
+  #variant-A .footer-col.right { text-align: right; }
+  #variant-A .footer-col b { display: block; font-size: 14px; color: var(--white); font-weight: 700; letter-spacing: 0.02em; }
+  #variant-A .seal {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -55%);
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--pink);
+    border: 4px solid var(--white);
+    display: flex; align-items: center; justify-content: center;
+    padding: 14px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  }
+  #variant-A .seal img { width: 100%; filter: brightness(0) invert(1); }
+
+  /* ---------- Variant B: Bold graphic / poster split-panel ---------- */
+  #variant-B.active { display: flex; }
+  #variant-B .side {
+    width: 34%;
+    background: var(--ink);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 32px;
+    overflow: hidden;
+  }
+  #variant-B .side .mark-watermark {
+    position: absolute;
+    right: -60px;
+    bottom: -60px;
+    width: 320px;
+    opacity: 0.14;
+  }
+  #variant-B .side .logo-type {
+    width: 150px;
+    position: relative;
+    z-index: 1;
+  }
+  #variant-B .side .tagline {
+    color: var(--white);
+    font-size: 13px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+    opacity: 0.8;
+  }
+  #variant-B .main {
+    width: 66%;
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+  }
+  #variant-B .eyebrow {
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    font-size: 13px;
+    color: var(--pink);
+    margin-bottom: 22px;
+  }
+  #variant-B .name {
+    font-family: 'Anton', sans-serif;
+    font-size: 72px;
+    line-height: 0.95;
+    color: var(--ink);
+    text-transform: uppercase;
+    margin: 0 0 22px;
+  }
+  #variant-B .body-line { font-size: 17px; color: #333; max-width: 520px; }
+  #variant-B .level-pill {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 10px 22px;
+    background: var(--pink);
+    color: var(--white);
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    width: fit-content;
+  }
+  #variant-B .footer-row {
+    margin-top: auto;
+    display: flex;
+    gap: 48px;
+    padding-top: 24px;
+    border-top: 1px solid #ddd;
+  }
+  #variant-B .footer-col { font-size: 13px; color: #555; }
+  #variant-B .footer-col b { display: block; font-size: 14px; color: var(--ink); font-weight: 700; }
+
+  /* ---------- Variant C: Minimal document / digital record ---------- */
+  #variant-C.active { display: flex; flex-direction: column; }
+  #variant-C .topbar {
+    height: 10px;
+    background: var(--teal);
+    width: 100%;
+  }
+  #variant-C .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 64px 0;
+  }
+  #variant-C .header-row .logo { height: 30px; }
+  #variant-C .header-row .doctype {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #888;
+  }
+  #variant-C .content {
+    padding: 40px 64px 0;
+    flex: 1;
+  }
+  #variant-C .body-line-sm {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  #variant-C .name {
+    font-family: 'Anton', sans-serif;
+    font-size: 58px;
+    color: var(--ink);
+    text-transform: uppercase;
+    line-height: 1;
+    margin: 4px 0 20px;
+  }
+  #variant-C .body-line {
+    font-size: 16px;
+    color: #333;
+    max-width: 560px;
+  }
+  #variant-C .stat-row {
+    display: flex;
+    gap: 1px;
+    background: #e2e2e2;
+    margin: 0 64px 40px;
+    margin-top: auto;
+  }
+  #variant-C .stat {
+    flex: 1;
+    background: var(--white);
+    padding: 20px 24px;
+  }
+  #variant-C .stat .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #999;
+    margin-bottom: 6px;
+  }
+  #variant-C .stat .value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  #variant-C .stat.accent .value { color: var(--pink); }
+
+  /* ---------- Switcher bar ---------- */
+  .switcher {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--white);
+    border-radius: 999px;
+    padding: 10px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    font-family: 'Inter', sans-serif;
+    z-index: 100;
+  }
+  .switcher button.arrow {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: var(--white);
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .switcher button.arrow:hover { background: rgba(255,255,255,0.24); }
+  .switcher .label {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0 14px;
+    min-width: 220px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+  <div class="meta-bar">
+    <b>Prototype — wayfinder ticket #10:</b> Design Certificate layout. Three structurally different variants below.
+    Switch with the bottom bar or the <b>←/→</b> keys. Flip the Level to see what changes between certificates
+    (currently: only the Level name — the brand kit's 2-colour palette is deliberately restrained, so this
+    prototype assumes one consistent colour treatment across all three Levels rather than colour-coding them).
+  </div>
+
+  <div class="level-controls">
+    <span style="font-weight:600; color:#444;">Level:</span>
+    <button data-level="Beginner" class="active">Beginner</button>
+    <button data-level="Intermediate">Intermediate</button>
+    <button data-level="Advanced">Advanced</button>
+  </div>
+
+  <div class="certificate-frame" id="certFrame">
+  <div class="certificate" id="certificate">
+
+    <!-- Variant A -->
+    <div id="variant-A" class="variant active">
+      <div class="frame">
+        <div class="frame-inner">
+          <div class="top-band">
+            <img class="logo" src="../../assets/brand/Save7-logo-horizontal.png" alt="Save7">
+          </div>
+          <div class="content-wrap">
+            <img class="watermark" src="../../assets/brand/Save7-V7-mark.png" alt="">
+            <div class="eyebrow">CERTIFICATE OF COMPLETION</div>
+            <div class="name">Thandiwe Nkosi</div>
+            <div class="body-line">This certifies that the above learner has successfully completed</div>
+            <div class="level-name js-level">Beginner Level</div>
+          </div>
+          <div class="footer-bar">
+            <div class="footer-col">
+              <b>SAVE7</b>
+              Issuing organisation
+            </div>
+            <div class="seal">
+              <img src="../../assets/brand/Save7-V7-mark.png" alt="">
+            </div>
+            <div class="footer-col right">
+              <b>16 September 2026</b>
+              Date issued
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variant B -->
+    <div id="variant-B" class="variant">
+      <div class="side">
+        <img class="logo-type" src="../../assets/brand/Save7-V7-with-type.png" alt="Save7">
+        <img class="mark-watermark" src="../../assets/brand/Save7-V7-mark.png" alt="">
+        <div class="tagline">This Certificate is issued by Save7 to recognise completion of a Course Level. No individual signatory — issued in the organisation's name.</div>
+      </div>
+      <div class="main">
+        <div class="eyebrow">CERTIFICATE OF COMPLETION</div>
+        <div class="name">Thandiwe<br>Nkosi</div>
+        <div class="body-line">Has completed the following Level of the Save7 organ donation course:</div>
+        <div class="level-pill js-level">Beginner Level</div>
+        <div class="footer-row">
+          <div class="footer-col"><b>Issued by</b>Save7</div>
+          <div class="footer-col"><b>Date</b>16 September 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variant C -->
+    <div id="variant-C" class="variant">
+      <div class="topbar"></div>
+      <div class="header-row">
+        <img class="logo" src="../../assets/brand/Save7-logo-horizontal.png" alt="Save7">
+        <div class="doctype">CERTIFICATE OF COMPLETION</div>
+      </div>
+      <div class="content">
+        <div class="body-line-sm">This certifies that</div>
+        <div class="name">Thandiwe Nkosi</div>
+        <div class="body-line">has completed all Stages and requirements of the Level below, as part of the Save7 organ donation awareness course.</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat accent">
+          <div class="label">LEVEL COMPLETED</div>
+          <div class="value js-level">Beginner Level</div>
+        </div>
+        <div class="stat">
+          <div class="label">DATE ISSUED</div>
+          <div class="value">16 September 2026</div>
+        </div>
+        <div class="stat">
+          <div class="label">ISSUING ORGANISATION</div>
+          <div class="value">Save7</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <div class="switcher">
+    <button class="arrow" id="prevBtn" aria-label="Previous variant">‹</button>
+    <div class="label" id="variantLabel"></div>
+    <button class="arrow" id="nextBtn" aria-label="Next variant">›</button>
+  </div>
+
+<script>
+  const variants = [
+    { key: 'A', name: 'Formal / traditional (framed, seal)' },
+    { key: 'B', name: 'Bold poster (split panel, ink side)' },
+    { key: 'C', name: 'Minimal document (stat-row footer)' },
+  ];
+
+  function currentIndex() {
+    const hash = location.hash.replace('#', '');
+    const i = variants.findIndex(v => v.key === hash);
+    return i === -1 ? 0 : i;
+  }
+
+  function render() {
+    const i = currentIndex();
+    variants.forEach((v, idx) => {
+      document.getElementById('variant-' + v.key).classList.toggle('active', idx === i);
+    });
+    document.getElementById('variantLabel').textContent = variants[i].key + ' — ' + variants[i].name;
+  }
+
+  function go(delta) {
+    const i = currentIndex();
+    const next = (i + delta + variants.length) % variants.length;
+    location.hash = variants[next].key;
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => go(-1));
+  document.getElementById('nextBtn').addEventListener('click', () => go(1));
+  window.addEventListener('hashchange', render);
+
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+    if (e.key === 'ArrowLeft') go(-1);
+    if (e.key === 'ArrowRight') go(1);
+  });
+
+  document.querySelectorAll('.level-controls button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.level-controls button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const label = btn.dataset.level + ' Level';
+      document.querySelectorAll('.js-level').forEach(el => el.textContent = label);
+    });
+  });
+
+  function fitScale() {
+    const frame = document.getElementById('certFrame');
+    const cert = document.getElementById('certificate');
+    const scale = Math.min(1, frame.clientWidth / 1200);
+    cert.style.transform = 'scale(' + scale + ')';
+    frame.style.height = (848 * scale) + 'px';
+  }
+
+  window.addEventListener('resize', fitScale);
+  if (!location.hash) location.hash = 'A';
+  render();
+  fitScale();
+</script>
+
+</body>
+</html>
