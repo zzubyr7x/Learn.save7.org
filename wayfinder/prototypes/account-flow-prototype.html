@@ -1,0 +1,580 @@
+<!--
+  PROTOTYPE — throwaway. Answers wayfinder ticket #15 (Design volunteer/student
+  account creation & login flow).
+
+  Three radically different signup/login flows for a Student account, switchable
+  via the bottom bar or URL hash (#A / #B / #C). Each variant is its own mini
+  screen-by-screen walkthrough (Prev/Next inside the phone frame) covering:
+  signup fields, the minor-signup age-gate decision (open per POPIA research,
+  issue #14), the POPIA s.18 notice moment, email verification, login, forgot-
+  password, session/first-login state, and the handoff into the first Baseline
+  Sitting (per CONTEXT.md: "at signup, before any Level").
+
+  Login / forgot-password / session handling are deliberately similar across
+  variants — those aren't the contested part of this ticket. The three variants
+  disagree about SIGNUP STRUCTURE instead:
+    A — single long-form page, age field inline, POPIA notice shown expanded
+        inline on the form itself, neutral "Student account" framing.
+    B — multi-step wizard, age-gate as its OWN screen before any data is
+        collected (cleanest POPIA ss.34-35 posture), POPIA notice as a
+        dedicated step, strong "volunteer" hero framing but explicit that the
+        account itself is a Student account.
+    C — narrative/progressive-disclosure, minimal fields up front (profile
+        completed later), age confirmation COMBINED into a single consent
+        checkbox with the itemised POPIA notice collapsed behind "Learn more"
+        by default. This is flagged in-page as a real compliance tradeoff to
+        react to, not a quiet default.
+
+  Uses the real brand assets from assets/brand/ and the brand's two Google
+  Fonts (Anton, Inter). Open this file directly in a browser, or via the
+  project's static-preview launch config — no build step either way.
+
+  Not for production. Fold the winning flow's decisions into the real spec and
+  delete this file (and its siblings on the throwaway branch) once ticket #15
+  is closed.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account flow prototype — wayfinder #15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #ED0E69;
+    --teal: #16B9B4;
+    --white: #FFFFFF;
+    --ink: #111111;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #e9e9e9;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 140px;
+  }
+
+  .meta-bar {
+    max-width: 900px;
+    width: 100%;
+    margin-bottom: 24px;
+    color: #444;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .meta-bar b { color: var(--ink); }
+  .meta-bar .flag {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #fff3cd;
+    color: #7a5b00;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .stage {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    max-width: 900px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ---------- phone frame ---------- */
+  .phone {
+    width: 360px;
+    min-height: 680px;
+    background: var(--white);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen { display: none; flex: 1; flex-direction: column; padding: 28px 24px 20px; }
+  .screen.active { display: flex; }
+
+  .step-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-top: 1px solid #eee;
+    background: #fafafa;
+    font-size: 12px;
+    color: #666;
+  }
+  .step-controls button {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink);
+    background: var(--white);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .step-controls button:disabled { opacity: 0.3; cursor: default; }
+  .step-controls .step-label { font-weight: 600; color: var(--ink); }
+
+  /* ---------- variant column ---------- */
+  .variant-col { display: none; flex-direction: column; align-items: center; gap: 14px; }
+  .variant-col.active { display: flex; }
+
+  .variant-title {
+    font-family: 'Anton', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    color: var(--ink);
+    text-align: center;
+  }
+  .variant-desc {
+    font-size: 12px;
+    color: #555;
+    max-width: 360px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* ---------- shared form styling ---------- */
+  h1.hd { font-family: 'Anton', sans-serif; text-transform: uppercase; font-size: 22px; color: var(--ink); margin: 0 0 6px; letter-spacing: 0.5px; }
+  h2.hd { font-family: 'Anton', sans-serif; text-transform: uppercase; font-size: 17px; color: var(--ink); margin: 0 0 10px; letter-spacing: 0.5px; }
+  p.sub { font-size: 13px; color: #555; margin: 0 0 18px; line-height: 1.5; }
+  .mark-icon { width: 30px; margin-bottom: 12px; }
+
+  label.field { display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 4px; margin-top: 14px; }
+  input[type=text], input[type=email], input[type=password], input[type=date] {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-size: 14px; color: var(--ink);
+  }
+  .hint { font-size: 11px; color: #888; margin-top: 3px; }
+  .error { font-size: 12px; color: var(--pink); font-weight: 600; margin-top: 6px; display: none; }
+  .error.show { display: block; }
+
+  .btn-primary {
+    margin-top: 20px; width: 100%; padding: 13px; border: none; border-radius: 10px;
+    background: var(--pink); color: var(--white); font-family: 'Inter', sans-serif;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  .btn-primary:disabled { background: #ddd; color: #999; cursor: default; }
+  .btn-secondary {
+    margin-top: 10px; width: 100%; padding: 11px; border: 1.5px solid var(--ink); border-radius: 10px;
+    background: var(--white); color: var(--ink); font-family: 'Inter', sans-serif;
+    font-weight: 700; font-size: 13px; cursor: pointer;
+  }
+  .link { color: var(--teal); background: #111; padding: 1px 4px; border-radius: 3px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; }
+
+  .consent-row { display: flex; gap: 10px; margin-top: 16px; align-items: flex-start; }
+  .consent-row input { margin-top: 3px; }
+  .consent-row .txt { font-size: 12px; color: var(--ink); line-height: 1.5; }
+
+  .notice-box {
+    margin-top: 14px; padding: 12px; background: #fafafa; border: 1px solid #eee; border-radius: 8px;
+    font-size: 11.5px; line-height: 1.6; color: #333;
+  }
+  .notice-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink); margin: 0 0 6px; }
+  .notice-box ul { margin: 0; padding-left: 16px; }
+  .notice-box .disclosure-toggle {
+    display: inline-block; margin-top: 8px; font-size: 11.5px; font-weight: 700; color: var(--pink); cursor: pointer;
+  }
+  .notice-box .notice-body { display: none; margin-top: 8px; }
+  .notice-box .notice-body.open { display: block; }
+
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; margin-left: 6px;
+  }
+  .badge.mandatory { background: #111; color: var(--white); }
+  .badge.optional { background: #eee; color: #555; }
+
+  .risk-flag {
+    margin-top: 14px; padding: 10px 12px; background: #fff3cd; border: 1px solid #ffe083; border-radius: 8px;
+    font-size: 11px; color: #7a5b00; line-height: 1.5;
+  }
+  .risk-flag b { display: block; margin-bottom: 3px; }
+
+  .age-gate-card {
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  }
+  .age-gate-card .icon { font-size: 40px; margin-bottom: 14px; }
+
+  .hero-card { text-align: center; }
+  .hero-card .kicker { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--pink); text-transform: uppercase; margin-bottom: 8px; }
+
+  .center-flex { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+
+  .baseline-card { background: var(--ink); color: var(--white); border-radius: 12px; padding: 18px; margin-top: 16px; }
+  .baseline-card h3 { font-family: 'Anton', sans-serif; font-size: 14px; text-transform: uppercase; margin: 0 0 6px; letter-spacing: 0.5px; color: var(--teal); }
+  .baseline-card p { font-size: 12px; margin: 0; line-height: 1.5; color: #ddd; }
+
+  /* ---------- bottom switcher ---------- */
+  .switcher {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 14px;
+    background: var(--ink); color: var(--white); padding: 10px 18px; border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35); font-family: 'Inter', sans-serif; z-index: 20;
+  }
+  .switcher button {
+    background: none; border: none; color: var(--white); font-size: 18px; cursor: pointer; line-height: 1; padding: 4px 8px;
+  }
+  .switcher .label { font-weight: 700; font-size: 13px; min-width: 220px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="meta-bar">
+  <b>Prototype for wayfinder issue #15</b> — "Design volunteer/student account creation &amp; login flow." Not for production.<br>
+  Login, forgot-password, and session handling deliberately look similar across variants — the contested part is signup structure, the age-gate placement, and how the POPIA notice is presented. Read the flag inside Variant C.
+</div>
+
+<div class="stage">
+
+  <!-- ===================== VARIANT A ===================== -->
+  <div class="variant-col" id="col-A">
+    <div class="variant-title">A — Single long-form page</div>
+    <div class="variant-desc">Everything on one screen: name, email, password, DOB (inline hard 18+ check), full POPIA notice shown expanded on the form itself. Neutral "Student account" framing — "volunteer" only mentioned as context.</div>
+    <div class="phone" id="phone-A">
+
+      <div class="screen active" data-screen="0">
+        <img class="mark-icon" src="../../assets/brand/Save7-V7-mark.png" alt="">
+        <h1 class="hd">Create your Learn account</h1>
+        <p class="sub">Whether you're here as a volunteer or just curious about organ donation, one account gets you through all three Levels.</p>
+
+        <label class="field">Full name <span class="badge mandatory">required</span></label>
+        <input type="text" placeholder="Jane Dlamini">
+
+        <label class="field">Email <span class="badge mandatory">required</span></label>
+        <input type="email" placeholder="jane@example.com">
+
+        <label class="field">Password <span class="badge mandatory">required</span></label>
+        <input type="password" placeholder="••••••••">
+
+        <label class="field">Date of birth <span class="badge mandatory">required</span></label>
+        <input type="date" id="a-dob" onchange="checkAgeA()">
+        <div class="error" id="a-age-error">You must be 18 or older to create a Save7 Learn account today.</div>
+
+        <div class="notice-box">
+          <h3>How we use your information (POPIA notice)</h3>
+          <ul>
+            <li>Name, email, password &mdash; account &amp; login <span class="badge mandatory">mandatory</span></li>
+            <li>Date of birth &mdash; confirming you're 18+ <span class="badge mandatory">mandatory</span></li>
+            <li>Baseline &amp; Stage results, Certificates &mdash; tracking your progress <span class="badge mandatory">mandatory</span></li>
+          </ul>
+          <p style="margin:8px 0 0;">Basis: your consent. May be shared with a future Save7-affiliated system ("Nerve Center") as an eligibility signal only, never raw scores. You can access, correct, or delete your data, or complain to the Information Regulator, at any time.</p>
+        </div>
+
+        <div class="consent-row">
+          <input type="checkbox" id="a-consent" onchange="toggleSubmitA()">
+          <div class="txt">I have read this notice and consent to Save7 processing my information as described.</div>
+        </div>
+
+        <button class="btn-primary" id="a-submit" disabled onclick="go('A',1)">Create account</button>
+      </div>
+
+      <div class="screen" data-screen="1">
+        <div class="center-flex">
+          <img class="mark-icon" src="../../assets/brand/Save7-V7-mark.png" alt="">
+          <h2 class="hd">Check your email</h2>
+          <p class="sub">We sent a verification link to jane@example.com. Click it to activate your account.</p>
+          <a class="link">Resend email</a>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="2">
+        <img class="mark-icon" src="../../assets/brand/Save7-V7-mark.png" alt="">
+        <h1 class="hd">Log in</h1>
+        <label class="field">Email</label>
+        <input type="email" value="jane@example.com">
+        <label class="field">Password</label>
+        <input type="password" placeholder="••••••••">
+        <div style="text-align:right;margin-top:8px;"><a class="link" onclick="go('A',3)">Forgot password?</a></div>
+        <button class="btn-primary" onclick="go('A',4)">Log in</button>
+      </div>
+
+      <div class="screen" data-screen="3">
+        <div class="center-flex">
+          <h2 class="hd">Reset your password</h2>
+          <p class="sub">Enter your email and we'll send a reset link. The link expires in 30 minutes; your session elsewhere is unaffected until you set a new password.</p>
+          <input type="email" placeholder="jane@example.com" style="width:100%;">
+          <button class="btn-primary" onclick="go('A',2)">Send reset link</button>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="4">
+        <h1 class="hd">Welcome, Jane</h1>
+        <p class="sub">You're logged in. Session stays active on this device for 30 days, refreshed on each visit.</p>
+        <div class="baseline-card">
+          <h3>Your Baseline Assessment</h3>
+          <p>Before you start Beginner Level, take the 20-question Baseline &mdash; purely diagnostic, no pass/fail. It's how we show your before/after over time.</p>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;">Start Baseline Assessment</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== VARIANT B ===================== -->
+  <div class="variant-col" id="col-B">
+    <div class="variant-title">B — Wizard, age-gate first</div>
+    <div class="variant-desc">Age confirmation is its OWN screen, before any data is collected at all &mdash; cleanest POPIA ss.34&ndash;35 posture. Strong "volunteer" hero framing, but explicit that this is a Student account underneath.</div>
+    <div class="phone" id="phone-B">
+
+      <div class="screen active" data-screen="0">
+        <div class="age-gate-card">
+          <div class="icon">🔒</div>
+          <h1 class="hd">Save7 Learn is for adult learners</h1>
+          <p class="sub">To create an account, please confirm you're 18 or older. We ask this before anything else so we never collect a minor's data by mistake.</p>
+          <div class="consent-row" style="text-align:left;">
+            <input type="checkbox" id="b-age" onchange="document.getElementById('b-continue').disabled = !this.checked">
+            <div class="txt">I confirm I am 18 years of age or older.</div>
+          </div>
+          <button class="btn-primary" id="b-continue" disabled onclick="go('B',1)">Continue</button>
+          <p class="hint" style="margin-top:14px;">Under 18? Save7 Learn doesn't yet support parental-consent signups &mdash; check back later or ask a facilitator about a group session.</p>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="1">
+        <div class="hero-card">
+          <div class="kicker">Welcome, future volunteer</div>
+          <h1 class="hd">Let's get you set up</h1>
+          <p class="sub">Just the basics for now — you can round out your profile later.</p>
+        </div>
+        <label class="field">Full name</label>
+        <input type="text" placeholder="Jane Dlamini">
+        <label class="field">Email</label>
+        <input type="email" placeholder="jane@example.com">
+        <label class="field">Password</label>
+        <input type="password" placeholder="••••••••">
+        <button class="btn-primary" onclick="go('B',2)">Next</button>
+      </div>
+
+      <div class="screen" data-screen="2">
+        <h2 class="hd">Before we continue</h2>
+        <p class="sub" style="margin-bottom:6px;">Here's exactly what Save7 collects and why (POPIA notice):</p>
+        <div class="notice-box">
+          <ul>
+            <li>Name, email, password <span class="badge mandatory">mandatory</span> — account &amp; login</li>
+            <li>Baseline &amp; Stage results <span class="badge mandatory">mandatory</span> — your progress</li>
+            <li>Certificates issued <span class="badge mandatory">mandatory</span> — proof of completion</li>
+          </ul>
+          <p style="margin:8px 0 0;">Basis: your consent (POPIA s.11). May later be shared with a Save7-affiliated system ("Nerve Center") — only a yes/no eligibility signal, never raw scores. You may access, correct, or delete this data, or lodge a complaint with the Information Regulator, at any time.</p>
+        </div>
+        <div class="consent-row">
+          <input type="checkbox" id="b-consent" onchange="toggleSubmitB()">
+          <div class="txt">I consent to this.</div>
+        </div>
+        <button class="btn-primary" id="b-submit" disabled onclick="go('B',3)">Create account</button>
+        <button class="btn-secondary" onclick="go('B',6)">I don't consent</button>
+      </div>
+
+      <div class="screen" data-screen="3">
+        <div class="center-flex">
+          <img class="mark-icon" src="../../assets/brand/Save7-V7-mark.png" alt="">
+          <h2 class="hd">Verify your email</h2>
+          <p class="sub">Tap the link we sent to jane@example.com to activate your account.</p>
+          <a class="link">Resend email</a>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="4">
+        <img class="mark-icon" src="../../assets/brand/Save7-V7-mark.png" alt="">
+        <h1 class="hd">Log in</h1>
+        <label class="field">Email</label>
+        <input type="email" value="jane@example.com">
+        <label class="field">Password</label>
+        <input type="password" placeholder="••••••••">
+        <div style="text-align:right;margin-top:8px;"><a class="link" onclick="alert('Same reset-by-email-link mechanism as Variant A.')">Forgot password?</a></div>
+        <button class="btn-primary" onclick="go('B',5)">Log in</button>
+      </div>
+
+      <div class="screen" data-screen="5">
+        <h1 class="hd">You're in, Jane</h1>
+        <p class="sub">Session stays active for 30 days on this device.</p>
+        <div class="baseline-card">
+          <h3>Your Baseline Assessment</h3>
+          <p>20 questions, purely diagnostic, before you touch Beginner Level. It's how your progress gets tracked from here.</p>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;">Start Baseline Assessment</button>
+      </div>
+
+      <div class="screen" data-screen="6">
+        <div class="center-flex">
+          <h2 class="hd">No problem</h2>
+          <p class="sub">You can't create an account without consenting to this notice — it's how we're allowed to process your information under POPIA. Come back any time.</p>
+          <button class="btn-secondary" onclick="go('B',2)">Back to notice</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== VARIANT C ===================== -->
+  <div class="variant-col" id="col-C">
+    <div class="variant-title">C — Narrative, progressive disclosure</div>
+    <div class="variant-desc">Mission-led hero, minimal fields up front (profile finished later), age check folded into ONE combined consent checkbox with the itemised notice collapsed by default. Flags its own compliance tradeoff below — react to it.</div>
+    <div class="phone" id="phone-C">
+
+      <div class="screen active" data-screen="0">
+        <div class="hero-card">
+          <div class="kicker">Save7</div>
+          <h1 class="hd">Every donor saves up to seven lives</h1>
+          <p class="sub">Learn the facts, bust the myths, and see where you'd fit in — as a volunteer, an advocate, or just someone who wants to know more.</p>
+        </div>
+        <button class="btn-primary" onclick="go('C',1)">Get started</button>
+      </div>
+
+      <div class="screen" data-screen="1">
+        <h2 class="hd">Quick start</h2>
+        <p class="sub">Just email and password to begin — you'll fill in your name and finish your profile after your first Baseline check.</p>
+        <label class="field">Email</label>
+        <input type="email" placeholder="jane@example.com">
+        <label class="field">Password</label>
+        <input type="password" placeholder="••••••••">
+        <button class="btn-primary" onclick="go('C',2)">Next</button>
+      </div>
+
+      <div class="screen" data-screen="2">
+        <h2 class="hd">One more thing</h2>
+        <div class="consent-row">
+          <input type="checkbox" id="c-consent" onchange="toggleSubmitC()">
+          <div class="txt">I confirm I'm 18 or older and consent to Save7 collecting my info as described below.</div>
+        </div>
+        <div class="notice-box">
+          <span class="disclosure-toggle" onclick="toggleNoticeC()">▸ Learn more about what we collect</span>
+          <div class="notice-body" id="c-notice-body">
+            <ul>
+              <li>Email, password <span class="badge mandatory">mandatory</span></li>
+              <li>Name, Baseline &amp; Stage results, Certificates <span class="badge mandatory">mandatory</span> — collected as you go, not today</li>
+            </ul>
+            <p style="margin:8px 0 0;">Basis: your consent. May be shared with a future Save7-affiliated system as a yes/no eligibility signal only. Access, correct, delete, or complain to the Information Regulator any time.</p>
+          </div>
+        </div>
+        <div class="risk-flag">
+          <b>Flag for the ticket, not a quiet decision:</b>
+          POPIA s.18 calls for an itemised notice at collection. Folding the age check into the same tick-box as consent, and collapsing the notice behind "Learn more," lowers friction but is a weaker compliance posture than Variant B's dedicated, always-expanded screens. Worth deciding deliberately, not by default.
+        </div>
+        <button class="btn-primary" id="c-submit" disabled onclick="go('C',3)">Create account</button>
+      </div>
+
+      <div class="screen" data-screen="3">
+        <div class="center-flex">
+          <img class="mark-icon" src="../../assets/brand/Save7-V7-mark.png" alt="">
+          <h2 class="hd">Almost there</h2>
+          <p class="sub">Verify your email to activate your account — check jane@example.com.</p>
+          <a class="link">Resend email</a>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="4">
+        <img class="mark-icon" src="../../assets/brand/Save7-V7-mark.png" alt="">
+        <h1 class="hd">Log in</h1>
+        <label class="field">Email</label>
+        <input type="email" value="jane@example.com">
+        <label class="field">Password</label>
+        <input type="password" placeholder="••••••••">
+        <div style="text-align:right;margin-top:8px;"><a class="link" onclick="alert('Same reset-by-email-link mechanism as Variant A.')">Forgot password?</a></div>
+        <button class="btn-primary" onclick="go('C',5)">Log in</button>
+      </div>
+
+      <div class="screen" data-screen="5">
+        <h1 class="hd">Before you dive in&hellip;</h1>
+        <p class="sub">Curious how much you already know? Session stays active for 30 days on this device.</p>
+        <div class="baseline-card">
+          <h3>See what you already know</h3>
+          <p>A quick 20-question check-in, no pass/fail. We'll show you how much you've learned when you finish each Level.</p>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;">Let's see</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="switcher">
+  <button onclick="cycle(-1)">&#8592;</button>
+  <div class="label" id="switch-label">A — Single long-form page</div>
+  <button onclick="cycle(1)">&#8594;</button>
+</div>
+
+<script>
+  var variants = ['A','B','C'];
+  var names = { A: 'Single long-form page', B: 'Wizard, age-gate first', C: 'Narrative, progressive disclosure' };
+  var current = 'A';
+
+  function setVariant(v) {
+    current = v;
+    variants.forEach(function(k){
+      document.getElementById('col-'+k).classList.toggle('active', k === v);
+    });
+    document.getElementById('switch-label').textContent = v + ' — ' + names[v];
+    location.hash = v;
+  }
+
+  function cycle(dir) {
+    var i = variants.indexOf(current);
+    i = (i + dir + variants.length) % variants.length;
+    setVariant(variants[i]);
+  }
+
+  function go(variant, screenIndex) {
+    var phone = document.getElementById('phone-' + variant);
+    var screens = phone.querySelectorAll('.screen');
+    screens.forEach(function(s){
+      s.classList.toggle('active', s.getAttribute('data-screen') === String(screenIndex));
+    });
+  }
+
+  function checkAgeA() {
+    var dob = new Date(document.getElementById('a-dob').value);
+    var err = document.getElementById('a-age-error');
+    if (!document.getElementById('a-dob').value) { err.classList.remove('show'); return; }
+    var age = (Date.now() - dob.getTime()) / (1000*60*60*24*365.25);
+    err.classList.toggle('show', age < 18);
+    toggleSubmitA();
+  }
+  function toggleSubmitA() {
+    var dobVal = document.getElementById('a-dob').value;
+    var consent = document.getElementById('a-consent').checked;
+    var underage = document.getElementById('a-age-error').classList.contains('show');
+    document.getElementById('a-submit').disabled = !(dobVal && consent && !underage);
+  }
+  function toggleSubmitB() {
+    document.getElementById('b-submit').disabled = !document.getElementById('b-consent').checked;
+  }
+  function toggleNoticeC() {
+    var body = document.getElementById('c-notice-body');
+    body.classList.toggle('open');
+  }
+  function toggleSubmitC() {
+    document.getElementById('c-submit').disabled = !document.getElementById('c-consent').checked;
+  }
+
+  document.addEventListener('keydown', function(e){
+    var tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key === 'ArrowLeft') cycle(-1);
+    if (e.key === 'ArrowRight') cycle(1);
+  });
+
+  var initial = location.hash.replace('#','');
+  setVariant(variants.indexOf(initial) >= 0 ? initial : 'A');
+</script>
+
+</body>
+</html>
