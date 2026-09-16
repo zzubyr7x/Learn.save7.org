@@ -21,7 +21,7 @@ A module/unit within a Level. A Level is composed of one or more Stages.
 The reference material set grounding course content: the files in `Desktop/Save7 Course/resources/` (10 PDFs + 1 video as of 2026-09-03), prioritizing South African–specific guidance. May grow; new sources get folded in without changing this definition.
 
 **Baseline Assessment**
-A single fixed-form MCQ test, cross-Level in scope (samples Beginner + Intermediate + Advanced content at reasonable/moderate difficulty), reused verbatim (not randomized) across all sittings so results are comparable over time.
+A single fixed-form MCQ test, cross-Level in scope (samples Beginner + Intermediate + Advanced content at reasonable/moderate difficulty), reused verbatim (not randomized) across all sittings so results are comparable over time. Purely diagnostic — no pass/fail; its value is the before/after comparison across sittings, not gating anything.
 
 **Baseline Sitting**
 One instance of a learner taking the Baseline Assessment. Every learner has 4 sittings on a fixed schedule: initial (at signup, before any Level) → after completing Beginner Level → after completing Intermediate Level → after completing Advanced Level.
@@ -36,7 +36,7 @@ The destination of this map: module list + learning objectives + source-to-conte
 The design of the Baseline Assessment and the per-Stage Quizzes: topic coverage, difficulty calibration, question count and structure. Not the question banks themselves.
 
 **Stage Quiz**
-A short comprehension-check quiz for one Stage, separate from the Baseline Assessment. Gauges progress and comprehension within a Level; each Level's Stages (3-5 per Level) each get one.
+A short comprehension-check quiz for one Stage, separate from the Baseline Assessment. Doesn't gate movement between Stages within a Level, but passing every Stage Quiz in a Level is required before that Level's Certificate is issued; each Level's Stages (3-5 per Level) each get one.
 
 **Source Note**
 An inline flag in the Curriculum Spec marking content drawn from a non-South-African-derived source (e.g. the Excellence in Deceased Donation course manual's Australian OTA/DonateLife-derived process framework), so lesson drafters never mistake it for South African-specific fact. Applies wherever such content appears in any Level, not just where first identified.
