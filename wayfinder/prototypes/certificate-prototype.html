@@ -412,7 +412,7 @@
   <div class="certificate" id="certificate">
 
     <!-- Variant A -->
-    <div id="variant-A" class="variant active">
+    <div id="variant-A" class="variant">
       <div class="frame">
         <div class="frame-inner">
           <div class="top-band">
@@ -444,7 +444,7 @@
     </div>
 
     <!-- Variant B -->
-    <div id="variant-B" class="variant">
+    <div id="variant-B" class="variant active">
       <div class="side">
         <img class="logo-type" src="../../assets/brand/Save7-V7-with-type.png" alt="Save7">
         <img class="mark-watermark" src="../../assets/brand/Save7-V7-mark.png" alt="">
@@ -555,7 +555,7 @@
   }
 
   window.addEventListener('resize', fitScale);
-  if (!location.hash) location.hash = 'A';
+  if (!location.hash) location.hash = 'B';
   render();
   fitScale();
 </script>
