@@ -37,3 +37,6 @@ The design of the Baseline Assessment and the per-Stage Quizzes: topic coverage,
 
 **Stage Quiz**
 A short comprehension-check quiz for one Stage, separate from the Baseline Assessment. Gauges progress and comprehension within a Level; each Level's Stages (3-5 per Level) each get one.
+
+**Source Note**
+An inline flag in the Curriculum Spec marking content drawn from a non-South-African-derived source (e.g. the Excellence in Deceased Donation course manual's Australian OTA/DonateLife-derived process framework), so lesson drafters never mistake it for South African-specific fact. Applies wherever such content appears in any Level, not just where first identified.
