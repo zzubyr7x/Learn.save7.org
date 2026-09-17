@@ -1,0 +1,659 @@
+<!--
+  PROTOTYPE — throwaway. Answers wayfinder ticket #17 (Design student
+  progress dashboard).
+
+  Three structurally different placements/layouts for the student-facing
+  progress dashboard, switchable via the bottom bar or URL hash (#A / #B / #C).
+  All three use the same mock Progress Record (per the data model shipped in
+  #16): a Student partway through Intermediate Level, Beginner Certificate
+  already earned, 2 of 4 Baseline Sittings taken so far.
+
+  The ticket's central open question is HOW this sits "alongside the existing
+  Learn nav" rather than replacing it — that's what the three variants
+  disagree about, not colour or copy:
+
+    A — DEDICATED TAB. A new "My Progress" nav item next to "Learn", its own
+        full page. Baseline trend as a proper line chart (one line per Level
+        across the 4 Sitting slots), Level cards with Stage checklists below.
+        Treats progress as a first-class destination.
+
+    B — EMBEDDED ON LEARN HOME. No new nav item at all. A compact "Your
+        Progress" strip lives at the top of the existing Learn home page,
+        above the Level list students already scroll through — sparkline
+        trend + Level completion rings + an expandable "View full progress"
+        panel. Treats progress as context for continuing to learn, not a
+        destination of its own.
+
+    C — SLIDE-OUT DRAWER. Learn nav is untouched except for a small
+        progress-ring badge next to the existing nav. Clicking it slides in
+        a right-hand drawer over the Learn page: before/after score bars per
+        Level (initial Sitting vs latest Sitting taken) instead of a trend
+        line, plus a compact Stage checklist and a certificates strip.
+        Treats progress as a quick-glance overlay.
+
+  Mock Progress Record used throughout (Baseline Assessment = 20 Qs,
+  Beginner/Intermediate/Advanced weighted 8/6/6, per #8):
+    Sitting 1 (initial, at signup):       Beg 3/8, Int 2/6, Adv 1/6 → 6/20
+    Sitting 2 (after Beginner complete):  Beg 7/8, Int 3/6, Adv 2/6 → 12/20
+    Sitting 3 (after Intermediate):       not yet taken — Intermediate in progress
+    Sitting 4 (after Advanced):           not yet taken
+  Beginner: 3/3 Stages passed, Level complete, Certificate issued.
+  Intermediate: Stage 1 + 2 passed, Stage 3 in progress, Stage 4 not started.
+  Advanced: not started.
+
+  Uses the real brand assets from assets/brand/ and the brand's two Google
+  Fonts (Anton, Inter). Open this file directly in a browser, or via the
+  project's static-preview launch config — no build step either way.
+
+  Not for production. Fold the winning placement's decisions into the real
+  spec and delete this file (and its siblings on the throwaway branch) once
+  ticket #17 is closed.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Progress dashboard prototype — wayfinder #17</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #ED0E69;
+    --teal: #16B9B4;
+    --white: #FFFFFF;
+    --ink: #111111;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #e9e9e9;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 140px;
+  }
+
+  .meta-bar {
+    max-width: 1120px;
+    width: 100%;
+    margin-bottom: 20px;
+    color: #444;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .meta-bar b { color: var(--ink); }
+  .meta-bar .flag {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #fff3cd;
+    color: #7a5b00;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .variant-col { display: none; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+  .variant-col.active { display: flex; }
+
+  .variant-title {
+    font-family: 'Anton', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    color: var(--ink);
+    text-align: center;
+  }
+  .variant-desc {
+    font-size: 12px;
+    color: #555;
+    max-width: 640px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* ---------- app frame (shared chrome) ---------- */
+  .app-frame {
+    width: 1080px;
+    max-width: 100%;
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.22);
+    overflow: hidden;
+    position: relative;
+  }
+  .browser-chrome {
+    height: 34px;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+  }
+  .browser-chrome span { width: 10px; height: 10px; border-radius: 50%; background: #bbb; }
+
+  .app-nav {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 14px 28px;
+    border-bottom: 1px solid #eee;
+  }
+  .app-nav img.mark { height: 28px; }
+  .nav-item {
+    font-weight: 600;
+    font-size: 14px;
+    color: #888;
+    padding: 6px 2px;
+    border-bottom: 2px solid transparent;
+    cursor: default;
+  }
+  .nav-item.active { color: var(--ink); border-bottom-color: var(--pink); }
+  .nav-item.new { color: var(--pink); position: relative; }
+  .nav-item.new::after {
+    content: 'NEW';
+    font-family: 'Inter', sans-serif;
+    font-size: 8px;
+    font-weight: 800;
+    background: var(--pink);
+    color: var(--white);
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .nav-spacer { flex: 1; }
+  .nav-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--ink); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+
+  .app-body { padding: 28px 32px; min-height: 460px; background: #fafafa; }
+
+  h1.page-title {
+    font-family: 'Anton', sans-serif;
+    text-transform: uppercase;
+    font-size: 26px;
+    letter-spacing: 0.3px;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+  .page-subtitle { color: #666; font-size: 13px; margin: 0 0 22px; }
+
+  /* ---------- stat tiles ---------- */
+  .stat-row { display: flex; gap: 16px; margin-bottom: 24px; }
+  .stat-tile {
+    flex: 1;
+    background: var(--white);
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat-tile .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #888; font-weight: 700; }
+  .stat-tile .value { font-family: 'Anton', sans-serif; font-size: 28px; color: var(--ink); margin-top: 4px; }
+  .stat-tile .sub { font-size: 12px; color: var(--teal); font-weight: 600; margin-top: 2px; }
+
+  /* ---------- Level cards ---------- */
+  .level-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .level-card {
+    background: var(--white);
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .level-card.locked { opacity: 0.55; }
+  .level-card .level-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .level-card .level-name { font-weight: 800; font-size: 14px; color: var(--ink); }
+  .level-card .level-pct { font-size: 12px; color: var(--pink); font-weight: 700; }
+  .progress-bar { height: 6px; background: #eee; border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+  .progress-bar .fill { height: 100%; background: var(--pink); }
+  .stage-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 4px 0; color: #444; }
+  .stage-dot { width: 16px; height: 16px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--white); font-weight: 700; }
+  .stage-dot.done { background: var(--teal); }
+  .stage-dot.progress { background: var(--pink); }
+  .stage-dot.todo { background: #ccc; }
+  .cert-badge {
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+  .cert-badge.earned { background: #e9f9f8; color: #0f7c78; }
+  .cert-badge.locked { background: #f1f1f1; color: #999; }
+
+  /* ---------- line chart (variant A) ---------- */
+  .chart-card { background: var(--white); border: 1px solid #eee; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
+  .chart-card .chart-title { font-weight: 800; font-size: 13.5px; color: var(--ink); margin-bottom: 2px; }
+  .chart-card .chart-note { font-size: 11.5px; color: #888; margin-bottom: 14px; }
+  .legend { display: flex; gap: 16px; margin-top: 10px; font-size: 11.5px; color: #555; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* ---------- Variant B: embedded widget ---------- */
+  .progress-widget {
+    background: linear-gradient(135deg, #fff, #fdf1f6);
+    border: 1px solid #f6d9e6;
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 22px;
+  }
+  .widget-top { display: flex; align-items: center; gap: 22px; }
+  .widget-top .title { font-weight: 800; font-size: 13.5px; color: var(--ink); flex: none; }
+  .ring-row { display: flex; gap: 20px; flex: 1; }
+  .ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; font-weight: 800; color: var(--ink);
+    flex: none;
+  }
+  .ring-label-wrap { display: flex; align-items: center; gap: 8px; }
+  .ring-name { font-size: 11.5px; color: #555; font-weight: 600; }
+  .sparkline-wrap { flex: none; }
+  .view-link { font-size: 12px; font-weight: 700; color: var(--pink); cursor: pointer; white-space: nowrap; }
+  .widget-expand {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed #f0c7da;
+    display: none;
+    gap: 16px;
+  }
+  .widget-expand.open { display: grid; grid-template-columns: repeat(3, 1fr); }
+
+  .learn-level-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--white); border: 1px solid #eee; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 10px;
+  }
+  .learn-level-row .name { font-weight: 700; font-size: 13.5px; color: var(--ink); }
+  .learn-level-row .desc { font-size: 12px; color: #888; margin-top: 2px; }
+  .continue-btn { background: var(--ink); color: var(--white); border: none; border-radius: 999px; padding: 8px 16px; font-size: 12.5px; font-weight: 700; cursor: default; }
+
+  /* ---------- Variant C: drawer ---------- */
+  .badge-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: conic-gradient(var(--pink) 0% 33%, #eee 33% 100%);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+  }
+  .badge-btn::before {
+    content: '33%';
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 800; color: var(--ink);
+  }
+  .drawer-backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.35);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    z-index: 5;
+  }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 360px;
+    background: var(--white); box-shadow: -8px 0 30px rgba(0,0,0,0.2);
+    transform: translateX(100%); transition: transform 0.25s;
+    z-index: 6; padding: 22px; overflow-y: auto;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-close { position: absolute; top: 16px; right: 18px; cursor: pointer; font-size: 16px; color: #999; }
+  .drawer h2 { font-family: 'Anton', sans-serif; text-transform: uppercase; font-size: 18px; margin: 0 0 2px; }
+  .drawer .drawer-sub { font-size: 12px; color: #888; margin-bottom: 18px; }
+  .bar-pair-row { margin-bottom: 16px; }
+  .bar-pair-row .bp-head { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .bp-track { height: 14px; background: #f1f1f1; border-radius: 999px; position: relative; overflow: hidden; margin-bottom: 4px; }
+  .bp-fill { height: 100%; border-radius: 999px; }
+  .bp-fill.before { background: #ccc; }
+  .bp-fill.after { background: var(--pink); }
+  .bp-caption { font-size: 10.5px; color: #999; display: flex; justify-content: space-between; }
+  .drawer-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #888; font-weight: 800; margin: 22px 0 10px; }
+  .drawer-stage-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 3px 0; color: #444; }
+  .drawer-cert-strip { display: flex; gap: 8px; margin-top: 4px; }
+  .drawer-cert-chip { flex: 1; text-align: center; border-radius: 8px; padding: 10px 6px; font-size: 10.5px; font-weight: 700; }
+  .drawer-cert-chip.earned { background: #e9f9f8; color: #0f7c78; }
+  .drawer-cert-chip.locked { background: #f1f1f1; color: #aaa; }
+
+  /* ---------- floating switcher ---------- */
+  .switcher {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--white);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 10px 10px 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    z-index: 100;
+    font-size: 13px;
+  }
+  .switcher button {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: none; background: rgba(255,255,255,0.12);
+    color: var(--white); font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .switcher button:hover { background: rgba(255,255,255,0.25); }
+  .switcher .switch-label { font-weight: 700; min-width: 190px; text-align: center; }
+  .switcher .switch-label small { display: block; font-weight: 400; opacity: 0.7; font-size: 10.5px; margin-top: 1px; }
+</style>
+</head>
+<body>
+
+  <div class="meta-bar">
+    <b>Wayfinder ticket #17</b> — Design student progress dashboard. Prototype only, not production code.
+    <div class="flag">Open question this prototype is testing: how the dashboard sits "alongside" the existing Learn nav.</div>
+  </div>
+
+  <!-- ============================= VARIANT A ============================= -->
+  <div class="variant-col" id="col-A">
+    <div class="variant-title">A — Dedicated "My Progress" tab</div>
+    <div class="variant-desc">A new top-level nav item next to Learn, its own full page. Baseline trend as a line chart across all 4 Sitting slots (dashed where not yet taken). Treats progress as a first-class destination alongside the course itself.</div>
+
+    <div class="app-frame">
+      <div class="browser-chrome"><span></span><span></span><span></span></div>
+      <div class="app-nav">
+        <img class="mark" src="../../assets/brand/Save7-logo-horizontal.png" alt="Save7">
+        <div class="nav-item">Learn</div>
+        <div class="nav-item active new">My Progress</div>
+        <div class="nav-item">Community</div>
+        <div class="nav-spacer"></div>
+        <div class="nav-avatar">TM</div>
+      </div>
+      <div class="app-body">
+        <h1 class="page-title">My Progress</h1>
+        <p class="page-subtitle">Thandiwe M. · Student since Aug 2026</p>
+
+        <div class="stat-row">
+          <div class="stat-tile">
+            <div class="label">Current Level</div>
+            <div class="value">Intermediate</div>
+            <div class="sub">2 of 4 Stages complete</div>
+          </div>
+          <div class="stat-tile">
+            <div class="label">Certificates earned</div>
+            <div class="value">1 / 3</div>
+            <div class="sub">Beginner ✓</div>
+          </div>
+          <div class="stat-tile">
+            <div class="label">Improvement so far</div>
+            <div class="value">+6 pts</div>
+            <div class="sub">6/20 → 12/20 (Sitting 1 → 2)</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Baseline Assessment score over time</div>
+          <div class="chart-note">Same 20-question Baseline retaken after each Level. Sittings 3–4 not yet taken.</div>
+          <svg viewBox="0 0 640 180" width="100%" height="180">
+            <!-- gridlines -->
+            <line x1="60" y1="10" x2="60" y2="150" stroke="#eee"/>
+            <line x1="60" y1="150" x2="620" y2="150" stroke="#ddd"/>
+            <text x="4" y="14" font-size="9" fill="#999" font-family="Inter">8</text>
+            <text x="4" y="82" font-size="9" fill="#999" font-family="Inter">4</text>
+            <text x="4" y="150" font-size="9" fill="#999" font-family="Inter">0</text>
+            <!-- x labels -->
+            <text x="60" y="168" font-size="9" fill="#888" font-family="Inter" text-anchor="middle">Initial</text>
+            <text x="240" y="168" font-size="9" fill="#888" font-family="Inter" text-anchor="middle">Post-Beginner</text>
+            <text x="420" y="168" font-size="9" fill="#bbb" font-family="Inter" text-anchor="middle">Post-Intermediate</text>
+            <text x="600" y="168" font-size="9" fill="#bbb" font-family="Inter" text-anchor="middle">Post-Advanced</text>
+            <!-- Beginner sub-score line (max 8) -->
+            <polyline points="60,116 240,32" fill="none" stroke="#ED0E69" stroke-width="2.5"/>
+            <line x1="240" y1="32" x2="600" y2="32" stroke="#ED0E69" stroke-width="2" stroke-dasharray="4 4" opacity="0.35"/>
+            <circle cx="60" cy="116" r="4" fill="#ED0E69"/>
+            <circle cx="240" cy="32" r="4" fill="#ED0E69"/>
+            <!-- Intermediate sub-score line (max 6) -->
+            <polyline points="60,110 240,80" fill="none" stroke="#16B9B4" stroke-width="2.5"/>
+            <line x1="240" y1="80" x2="600" y2="80" stroke="#16B9B4" stroke-width="2" stroke-dasharray="4 4" opacity="0.35"/>
+            <circle cx="60" cy="110" r="4" fill="#16B9B4"/>
+            <circle cx="240" cy="80" r="4" fill="#16B9B4"/>
+            <!-- Advanced sub-score line (max 6) -->
+            <polyline points="60,132 240,113" fill="none" stroke="#111111" stroke-width="2.5"/>
+            <line x1="240" y1="113" x2="600" y2="113" stroke="#111111" stroke-width="2" stroke-dasharray="4 4" opacity="0.25"/>
+            <circle cx="60" cy="132" r="4" fill="#111111"/>
+            <circle cx="240" cy="113" r="4" fill="#111111"/>
+          </svg>
+          <div class="legend">
+            <span><i style="background:#ED0E69"></i>Beginner sub-score (/8)</span>
+            <span><i style="background:#16B9B4"></i>Intermediate sub-score (/6)</span>
+            <span><i style="background:#111111"></i>Advanced sub-score (/6)</span>
+          </div>
+        </div>
+
+        <div class="level-grid">
+          <div class="level-card">
+            <div class="level-head"><span class="level-name">Beginner</span><span class="level-pct">100%</span></div>
+            <div class="progress-bar"><div class="fill" style="width:100%"></div></div>
+            <div class="stage-row"><span class="stage-dot done">✓</span>Why Donation Matters</div>
+            <div class="stage-row"><span class="stage-dot done">✓</span>Busting the Myths</div>
+            <div class="stage-row"><span class="stage-dot done">✓</span>How Donation Actually Works</div>
+            <span class="cert-badge earned">🏅 Certificate earned</span>
+          </div>
+          <div class="level-card">
+            <div class="level-head"><span class="level-name">Intermediate</span><span class="level-pct">50%</span></div>
+            <div class="progress-bar"><div class="fill" style="width:50%"></div></div>
+            <div class="stage-row"><span class="stage-dot done">✓</span>The Process</div>
+            <div class="stage-row"><span class="stage-dot done">✓</span>Consent</div>
+            <div class="stage-row"><span class="stage-dot progress">●</span>SA Legal Framework</div>
+            <div class="stage-row"><span class="stage-dot todo"></span>Ethics of Donation</div>
+            <span class="cert-badge locked">🔒 Certificate locked</span>
+          </div>
+          <div class="level-card locked">
+            <div class="level-head"><span class="level-name">Advanced</span><span class="level-pct">0%</span></div>
+            <div class="progress-bar"><div class="fill" style="width:0%"></div></div>
+            <div class="stage-row"><span class="stage-dot todo"></span>Coordinator's Role</div>
+            <div class="stage-row"><span class="stage-dot todo"></span>The Donation Conversation</div>
+            <div class="stage-row"><span class="stage-dot todo"></span>Consent & End-of-Life Ethics</div>
+            <div class="stage-row"><span class="stage-dot todo"></span>Public Advocacy</div>
+            <span class="cert-badge locked">🔒 Certificate locked</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= VARIANT B ============================= -->
+  <div class="variant-col" id="col-B">
+    <div class="variant-title">B — Embedded widget on the Learn home</div>
+    <div class="variant-desc">No new nav item. A compact "Your Progress" strip sits above the existing Level list on the Learn home page — rings + sparkline, expanding in place. Treats progress as context for continuing the course, not a separate destination.</div>
+
+    <div class="app-frame">
+      <div class="browser-chrome"><span></span><span></span><span></span></div>
+      <div class="app-nav">
+        <img class="mark" src="../../assets/brand/Save7-logo-horizontal.png" alt="Save7">
+        <div class="nav-item active">Learn</div>
+        <div class="nav-item">Community</div>
+        <div class="nav-spacer"></div>
+        <div class="nav-avatar">TM</div>
+      </div>
+      <div class="app-body">
+        <h1 class="page-title">Learn</h1>
+        <p class="page-subtitle">Continue where you left off</p>
+
+        <div class="progress-widget">
+          <div class="widget-top">
+            <div class="title">Your Progress</div>
+            <div class="ring-row">
+              <div class="ring-label-wrap">
+                <div class="ring" style="background:conic-gradient(#ED0E69 0% 100%, #f6d9e6 100% 100%)">100%</div>
+                <div class="ring-name">Beginner</div>
+              </div>
+              <div class="ring-label-wrap">
+                <div class="ring" style="background:conic-gradient(#16B9B4 0% 50%, #eee 50% 100%)">50%</div>
+                <div class="ring-name">Intermediate</div>
+              </div>
+              <div class="ring-label-wrap">
+                <div class="ring" style="background:conic-gradient(#ccc 0% 0%, #eee 0% 100%)">0%</div>
+                <div class="ring-name">Advanced</div>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <svg width="90" height="30" viewBox="0 0 90 30">
+                <polyline points="4,20 44,8" fill="none" stroke="#ED0E69" stroke-width="2"/>
+                <circle cx="4" cy="20" r="2.5" fill="#ED0E69"/>
+                <circle cx="44" cy="8" r="2.5" fill="#ED0E69"/>
+                <line x1="44" y1="8" x2="86" y2="8" stroke="#ED0E69" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.4"/>
+              </svg>
+            </div>
+            <div class="view-link" onclick="document.getElementById('b-expand').classList.toggle('open')">View full progress ▾</div>
+          </div>
+          <div class="widget-expand" id="b-expand">
+            <div>
+              <div class="stage-row"><span class="stage-dot done">✓</span>Beginner — Certificate earned</div>
+            </div>
+            <div>
+              <div class="stage-row"><span class="stage-dot done">✓</span>The Process</div>
+              <div class="stage-row"><span class="stage-dot done">✓</span>Consent</div>
+              <div class="stage-row"><span class="stage-dot progress">●</span>SA Legal Framework</div>
+              <div class="stage-row"><span class="stage-dot todo"></span>Ethics of Donation</div>
+            </div>
+            <div>
+              <div class="stage-row"><span class="stage-dot todo"></span>Advanced not started</div>
+              <div class="stage-row" style="color:#999">Baseline: 6/20 → 12/20 so far</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="learn-level-row">
+          <div><div class="name">Intermediate · SA Legal Framework</div><div class="desc">Stage 3 of 4 — in progress</div></div>
+          <button class="continue-btn">Continue</button>
+        </div>
+        <div class="learn-level-row">
+          <div><div class="name">Advanced Level</div><div class="desc">Locked until Intermediate is complete</div></div>
+          <button class="continue-btn" style="background:#ddd;color:#888">Locked</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= VARIANT C ============================= -->
+  <div class="variant-col" id="col-C">
+    <div class="variant-title">C — Slide-out drawer from a nav badge</div>
+    <div class="variant-desc">Learn nav is untouched apart from a small progress-ring badge. Clicking it slides in a drawer over the page — before/after score bars instead of a trend line, a compact Stage checklist, and a certificates strip. Treats progress as a quick-glance overlay.</div>
+
+    <div class="app-frame">
+      <div class="browser-chrome"><span></span><span></span><span></span></div>
+      <div class="app-nav">
+        <img class="mark" src="../../assets/brand/Save7-logo-horizontal.png" alt="Save7">
+        <div class="nav-item active">Learn</div>
+        <div class="nav-item">Community</div>
+        <div class="nav-spacer"></div>
+        <div class="badge-btn" onclick="document.getElementById('c-drawer').classList.add('open'); document.getElementById('c-backdrop').classList.add('open')" title="Your progress"></div>
+        <div class="nav-avatar">TM</div>
+      </div>
+      <div class="app-body">
+        <h1 class="page-title">Learn</h1>
+        <p class="page-subtitle">Nav is unchanged — click the ring badge above to open your progress.</p>
+        <div class="learn-level-row">
+          <div><div class="name">Intermediate · SA Legal Framework</div><div class="desc">Stage 3 of 4 — in progress</div></div>
+          <button class="continue-btn">Continue</button>
+        </div>
+        <div class="learn-level-row">
+          <div><div class="name">Advanced Level</div><div class="desc">Locked until Intermediate is complete</div></div>
+          <button class="continue-btn" style="background:#ddd;color:#888">Locked</button>
+        </div>
+      </div>
+
+      <div class="drawer-backdrop" id="c-backdrop" onclick="document.getElementById('c-drawer').classList.remove('open'); this.classList.remove('open')"></div>
+      <div class="drawer" id="c-drawer">
+        <span class="drawer-close" onclick="document.getElementById('c-drawer').classList.remove('open'); document.getElementById('c-backdrop').classList.remove('open')">✕</span>
+        <h2>My Progress</h2>
+        <div class="drawer-sub">Thandiwe M. · Intermediate Level</div>
+
+        <div class="bar-pair-row">
+          <div class="bp-head"><span>Beginner</span><span>3/8 → 7/8</span></div>
+          <div class="bp-track"><div class="bp-fill before" style="width:37.5%"></div></div>
+          <div class="bp-track"><div class="bp-fill after" style="width:87.5%"></div></div>
+          <div class="bp-caption"><span>Initial Sitting</span><span>Latest Sitting</span></div>
+        </div>
+        <div class="bar-pair-row">
+          <div class="bp-head"><span>Intermediate</span><span>2/6 → 3/6</span></div>
+          <div class="bp-track"><div class="bp-fill before" style="width:33%"></div></div>
+          <div class="bp-track"><div class="bp-fill after" style="width:50%"></div></div>
+          <div class="bp-caption"><span>Initial Sitting</span><span>Latest Sitting</span></div>
+        </div>
+        <div class="bar-pair-row">
+          <div class="bp-head"><span>Advanced</span><span>1/6 → 2/6</span></div>
+          <div class="bp-track"><div class="bp-fill before" style="width:17%"></div></div>
+          <div class="bp-track"><div class="bp-fill after" style="width:33%"></div></div>
+          <div class="bp-caption"><span>Initial Sitting</span><span>Latest Sitting</span></div>
+        </div>
+
+        <div class="drawer-section-title">Stages</div>
+        <div class="drawer-stage-row"><span class="stage-dot done">✓</span>Beginner — complete</div>
+        <div class="drawer-stage-row"><span class="stage-dot done">✓</span>The Process</div>
+        <div class="drawer-stage-row"><span class="stage-dot done">✓</span>Consent</div>
+        <div class="drawer-stage-row"><span class="stage-dot progress">●</span>SA Legal Framework</div>
+        <div class="drawer-stage-row"><span class="stage-dot todo"></span>Ethics of Donation</div>
+        <div class="drawer-stage-row"><span class="stage-dot todo"></span>Advanced — not started</div>
+
+        <div class="drawer-section-title">Certificates</div>
+        <div class="drawer-cert-strip">
+          <div class="drawer-cert-chip earned">Beginner<br>🏅</div>
+          <div class="drawer-cert-chip locked">Intermediate<br>🔒</div>
+          <div class="drawer-cert-chip locked">Advanced<br>🔒</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= SWITCHER ============================= -->
+  <div class="switcher">
+    <button onclick="cycle(-1)" aria-label="Previous variant">←</button>
+    <div class="switch-label" id="switch-label"></div>
+    <button onclick="cycle(1)" aria-label="Next variant">→</button>
+  </div>
+
+<script>
+  const variants = [
+    { key: 'A', name: 'Dedicated tab' },
+    { key: 'B', name: 'Embedded on Learn home' },
+    { key: 'C', name: 'Slide-out drawer' },
+  ];
+
+  function currentIndex() {
+    const hash = (location.hash || '#A').replace('#', '');
+    const i = variants.findIndex(v => v.key === hash);
+    return i === -1 ? 0 : i;
+  }
+
+  function render() {
+    const i = currentIndex();
+    variants.forEach((v, idx) => {
+      document.getElementById('col-' + v.key).classList.toggle('active', idx === i);
+    });
+    document.getElementById('switch-label').innerHTML =
+      variants[i].key + ' <small>' + variants[i].name + '</small>';
+  }
+
+  function cycle(delta) {
+    const i = currentIndex();
+    const next = (i + delta + variants.length) % variants.length;
+    location.hash = '#' + variants[next].key;
+  }
+
+  window.addEventListener('hashchange', render);
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+    if (e.key === 'ArrowLeft') cycle(-1);
+    if (e.key === 'ArrowRight') cycle(1);
+  });
+
+  if (!location.hash) location.hash = '#A';
+  render();
+</script>
+</body>
+</html>
