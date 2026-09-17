@@ -4,6 +4,8 @@ Glossary for the wayfinder map planning a curriculum + assessment spec for Save7
 
 ## Terms
 
+### Curriculum & Assessment
+
 **Course**
 The whole learn.save7.org program, all three Levels combined. Singular, capital-C when referring to the whole thing.
 
@@ -40,3 +42,29 @@ A short comprehension-check quiz for one Stage, separate from the Baseline Asses
 
 **Source Note**
 An inline flag in the Curriculum Spec marking content drawn from a non-South-African-derived source (e.g. the Excellence in Deceased Donation course manual's Australian OTA/DonateLife-derived process framework), so lesson drafters never mistake it for South African-specific fact. Applies wherever such content appears in any Level, not just where first identified.
+
+### Accounts, Login & Dashboard
+
+**Student**
+The only account type on learn.save7.org; anyone taking the Course. "Volunteer" describes a Student's intent, not a distinct account type — there is no separate volunteer account.
+_Avoid_: Volunteer, Learner, User
+
+**Admin**
+A Save7 staff / program-coordinator account with oversight-only visibility into Students' progress. No content-management capability — content stays a separate, hand-edited concern outside this account type's scope.
+_Avoid_: Coordinator, Staff account
+
+**Progress Record**
+The stored state tracking one Student's advancement through the Course: their Baseline Sittings (up to 4, one per fixed slot, each holding score-by-Level sub-scores + a total, never raw answers), the pass/fail state and score of their latest attempt on each Stage Quiz, and timestamped completion flags for Stage, Level, and Certificate issuance. Feeds both the student-facing progress dashboard and admin oversight views.
+
+**Improvement**
+The before/after comparison a Student's Progress Record supports: the delta between their initial Baseline Sitting's per-Level sub-score and the Sitting taken after completing that Level, plus the full 4-point trend across all Sittings. Always computed from the Progress Record at read time — never a value stored in its own right.
+
+**Nerve Center**
+A separate, future Save7 platform for Save7 volunteers, mapped and built independently of learn.save7.org. This Course only produces the completion signal Nerve Center will eventually consume for its own account-eligibility decisions — it does not design Nerve Center's intake, validation, or accounts.
+_Avoid_: Save7 OS (informal name for the same future platform)
+
+**Eligibility Rule**
+The admin-configurable, versioned condition that determines Nerve Center eligibility: a list of completion flags from a Student's Progress Record (e.g. which of Beginner/Intermediate/Advanced Level-complete) that must all be true. Editing the rule creates a new version; it never keys off Baseline Sitting scores or engagement data. The exact default set of required flags is not yet settled.
+
+**Nerve Center Eligibility Signal**
+The per-Student record produced by evaluating a Student's Progress Record against an Eligibility Rule: an eligible flag, the timestamp it was evaluated, and a reference to the Eligibility Rule version that produced it. This is what would eventually be exported to Nerve Center — never raw Baseline scores or completion history.
