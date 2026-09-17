@@ -50,8 +50,11 @@ The only account type on learn.save7.org; anyone taking the Course. "Volunteer" 
 _Avoid_: Volunteer, Learner, User
 
 **Admin**
-A Save7 staff / program-coordinator account with oversight-only visibility into Students' progress. No content-management capability — content stays a separate, hand-edited concern outside this account type's scope.
+A Save7 staff / program-coordinator account with oversight-only visibility into Students' progress. No content-management capability — content stays a separate, hand-edited concern outside this account type's scope. A single flat role, not tiered: every Admin sees the same global pool view (its Growth Indicators) and can drill into any Student's complete Progress Record unrestricted, and can edit the Eligibility Rule's required-flags list.
 _Avoid_: Coordinator, Staff account
+
+**Growth Indicator**
+One of the aggregate, cohort-wide metrics Admin's pool view shows, derived at read time across every Student's Progress Record: cohort size, per-Level completion rate, per-Stage Quiz pass rate, average per-Level Baseline improvement, and cohort-wide Baseline trend. Scoped only to what the Progress Record already stores — distinct from the richer engagement metrics (time-on-task, login frequency, quiz-attempt history, etc.) still left as fog.
 
 **Progress Record**
 The stored state tracking one Student's advancement through the Course: their Baseline Sittings (up to 4, one per fixed slot, each holding score-by-Level sub-scores + a total, never raw answers), the pass/fail state and score of their latest attempt on each Stage Quiz, and timestamped completion flags for Stage, Level, and Certificate issuance. Feeds both the student-facing progress dashboard and admin oversight views.
