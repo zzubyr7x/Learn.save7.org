@@ -67,7 +67,9 @@ by passing every Stage Quiz in that Level (see [Assessment Blueprint](#assessmen
 
 - Organ vs. tissue distinction
 - Treating team vs. transplant team, legally separate
-- Two independent doctors (5+ yrs experience) certify brain death; state
+- Two independent doctors certify brain death — one with 5+ years'
+  experience, neither on the transplant team — using a rigorous,
+  repeatable set of tests, each doctor testing independently; state
   pathologist for accidental deaths
 - DBD vs. DCD, plain-language
 - Free, voluntary; registering *and* telling family both required
@@ -95,13 +97,62 @@ is reused (already covered via the video and the Channel Africa quote).
 - Referral: who refers, when, and why timing matters
 - Determining death: brain death and circulatory death, plain language
   (grounded in the peer-reviewed `SAJCC-37-1-466.pdf`, not the corpus's
-  draft CCSSA PDF)
+  draft CCSSA PDF). Taught at **explanatory depth for both**
+  determinations — the contrast is the teachable thing, not either test
+  alone. Explanatory only: never a procedure a learner could perform.
+  - **Before testing can begin** (why the test proves anything): an
+    established, irreversible cause of the injury, normal body
+    temperature, adequate blood pressure, sedative/CNS-depressant drug
+    effect excluded, severe metabolic derangement corrected. This is the
+    step that rules out everything that *mimics* brain death — the
+    direct answer to "how do you know they aren't just deeply sedated,
+    or cold?"
+  - **The three-step brain-death test**, and why each step establishes
+    irreversibility: (1) coma; (2) absent brainstem reflexes, checked
+    one pathway at a time — light into the eyes, the cornea touched,
+    pain at the face, ice-water into the ear, gag, cough; (3) the
+    apnoea test — the ventilator is disconnected under controlled
+    conditions to see whether the body ever tries to breathe on its own.
+    No clinical thresholds or values are taught.
+  - **Circulatory-death determination:** five minutes of continuously
+    absent circulation and breathing, then confirmation of absent
+    pupillary and motor response. **Why the wait exists:** a stopped
+    heart can, very rarely, restart on its own in the first minutes;
+    past five continuous minutes it does not. Without the reason, the
+    five minutes reads as arbitrary — or as a countdown run for the
+    transplant team's benefit.
+  - One cross-referencing sentence that in DCD the clock starts only
+    after a decision to withdraw treatment made independently, for the
+    patient's own reasons — full decoupling is taught in Stages 2 and 4,
+    not re-taught here.
 - DBD vs. DCD explained
 - Tissue vs. organ donation — how the pathways differ
 - Brief "who's who" context: ODF, SATS/SATCS, tissue banks/transplant centres
 - **Learning objective:** Explain how a potential donation is identified,
-  how death is legally and clinically determined, and how organ vs. tissue
-  donation pathways differ.
+  how death is legally and clinically determined, **why those
+  determinations establish that the death is irreversible**, and how
+  organ vs. tissue donation pathways differ.
+
+**Drafter notes on the determination content:**
+
+- 📌 **Not** a Source Note case. All of it comes from the published,
+  peer-reviewed CCSSA/SAJCC guideline — South African-specific, and
+  already this Stage's cited anchor. The Source Note convention flags
+  the opposite situation.
+- **Do not import the atropine test.** `Document H – SATS Red File`
+  reproduces a simplified bedside version of these criteria that
+  includes an atropine test. It is a SATCS addition, absent from the
+  CCSSA guideline and **not required for certification** — a drafter
+  working from the Red File could easily present it as a fourth step.
+- **Paediatric, ECMO and pregnancy provisions are deliberately not
+  taught.** The guideline carries specific provisions for each (e.g.
+  brain death cannot be diagnosed below 36 weeks' corrected gestation).
+  They are clinical variants with no explanatory payload for this
+  audience, and excluding them is a decision, not an oversight.
+- **Depth boundary re-affirmed:** this readmits only "basics" depth from
+  territory cut with `7 Lives in 7 Steps.pdf`. That PDF stays cut, and
+  Advanced's audience boundary (healthcare-adjacent, not full
+  clinicians) is unchanged.
 
 ### Stage 2 — Consent: Whose Decision and How
 
@@ -242,6 +293,13 @@ Cross-Level diagnostic, **not** a Stage Quiz.
 - **Difficulty** scales with source Level (Beginner-sourced easier,
   Advanced-sourced harder) — flagged as adjustable post-launch if learner
   feedback says it's miscalibrated.
+- **Intermediate Stage 1's 2 questions may draw on the death-determination
+  content, capped at the conceptual tier** — e.g. that South Africa
+  recognises two ways of determining death, or that certification is
+  independent of the transplant team. Not reflexes, not the apnoea test:
+  the Baseline is fixed-form and first sat at signup, so a question at
+  that depth scores zero for everyone at sitting 1 and discriminates
+  nothing. The weighting is unchanged — Stage 1 keeps exactly 2 of 20.
 - **Format:** 4-option single-best-answer MCQ, no "not sure" option.
 - **Reporting:** score-by-Level breakdown (3 numbers) + overall score,
   with a trend view across prior sittings once more than one exists.
@@ -261,6 +319,16 @@ One per Stage, **11 total**.
 - **Unlimited retries**, no cooldown. A retry avoids repeating the
   immediately-prior attempt's 5 questions (draws from the remaining 10
   first).
+- **One targeted coverage floor** (Intermediate Stage 1 only): its bank
+  must include **at least one question on brain-death determination and
+  at least one on circulatory-death determination**. A floor, not an
+  allocation. Its reason is specific and doesn't generalise: a drafter
+  writing 15 questions for "How Donation Happens" will reach for DBD
+  because it's the familiar pathway, and could plausibly produce a full
+  bank that never touches DCD — the pathway families find hardest to
+  follow, and the one the Stage deliberately gives equal treatment. No
+  other bank carries a coverage constraint, and this is not a precedent
+  that obliges one.
 
 ---
 
@@ -326,6 +394,12 @@ handoff, but they're real gaps worth tracking:
   Stage 2, myth #5 (currently kept generic).
 - **Tissue Bank FAQ direct review** — not yet independently checked
   against the Beginner myths list.
+- **CCSSA/SAJCC determination-of-death guideline is due for review.**
+  The guideline sets a 5-year review cycle, making a review due in
+  **2026**; no published replacement was found as of the Sept 2026
+  research pass. Re-check before Intermediate Stage 1's determination
+  content is drafted — that content now rests on it directly rather
+  than in a single summary bullet.
 - **Deeper ODF/SATS advocacy-toolkit outreach** for Advanced Level's
   Stage D, if lesson-content drafting later wants more than the ULUNTU
   case-study framing this spec settled for.
